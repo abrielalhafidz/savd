@@ -37,3 +37,6 @@ next-env.d.ts
 
 # tasks
 TASKS.md
+
+# Supabase CLI machine-specific link metadata
+supabase/.temp/
