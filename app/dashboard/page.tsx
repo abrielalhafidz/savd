@@ -1,23 +1,44 @@
-import { createClient } from "@/lib/supabase/server"
-import { redirect } from "next/navigation"
+"use client"
 
-export default async function DashboardPage() {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+import { LogoutButton } from "@/components/logout-button"
+import { useAuth } from "@/hooks/use-auth"
+import { useRouter } from "next/navigation"
+import { useEffect } from "react"
+
+export default function DashboardPage() {
+  const { user, loading } = useAuth()
+  const router = useRouter()
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push("/login")
+    }
+  }, [user, loading, router])
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-muted-foreground">Loading...</div>
+      </div>
+    )
+  }
 
   if (!user) {
-    redirect("/login")
+    return null
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted p-8">
       <div className="mx-auto max-w-4xl">
-        <h1 className="mb-4 text-3xl font-bold">Welcome to savd!</h1>
-        <p className="mb-8 text-muted-foreground">
-          You&apos;re logged in as {user.email}
-        </p>
+        <div className="mb-8 flex items-center justify-between">
+          <div>
+            <h1 className="mb-2 text-3xl font-bold">Welcome to savd!</h1>
+            <p className="text-muted-foreground">
+              You&apos;re logged in as {user.email}
+            </p>
+          </div>
+          <LogoutButton />
+        </div>
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
           <div className="rounded-lg border bg-card p-6">

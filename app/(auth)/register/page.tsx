@@ -1,20 +1,29 @@
 "use client"
 
-import { useState } from "react"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
 import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { registerSchema, type RegisterInput } from "@/schemas/auth"
 import { createClient } from "@/lib/supabase/client"
-import { toast } from "sonner"
-import Link from "next/link"
+import { registerSchema, type RegisterInput } from "@/schemas/auth"
+import { zodResolver } from "@hookform/resolvers/zod"
 import { Loader2 } from "lucide-react"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
+import { useState } from "react"
+import { useForm } from "react-hook-form"
+import { toast } from "sonner"
 
 export default function RegisterPage() {
   const [isLoading, setIsLoading] = useState(false)
+  const router = useRouter()
   const supabase = createClient()
 
   const form = useForm<RegisterInput>({
@@ -29,7 +38,8 @@ export default function RegisterPage() {
   const onSubmit = async (data: RegisterInput) => {
     setIsLoading(true)
     try {
-      const { error } = await supabase.auth.signUp({
+      // Attempt to sign up the user
+      const { error, data: signUpData } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
         options: {
@@ -37,12 +47,33 @@ export default function RegisterPage() {
         },
       })
 
+      // Check for any error regardless of message content
       if (error) {
-        toast.error(error.message)
+        toast.error(error.message || "Failed to create account")
         return
       }
 
-      toast.success("Account created! Please check your email to verify your account.")
+      // Check if user was actually created and has proper data
+      if (!signUpData || !signUpData.user) {
+        toast.error("Failed to create account. Please try again.")
+        return
+      }
+
+      // Check if the response indicates this is an existing user scenario
+      // Supabase sometimes returns success but with identity information for existing users
+      if (
+        signUpData.user.identities &&
+        signUpData.user.identities.length === 0
+      ) {
+        toast.error("Email already registered. Please log in instead.")
+        return
+      }
+      toast.success(
+        "Account created! Please check your email to confirm your account."
+      )
+      setTimeout(() => {
+        router.push("/login")
+      }, 2000)
     } catch (error) {
       toast.error("An unexpected error occurred")
     } finally {
@@ -72,10 +103,12 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted p-4">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background to-muted p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold">Create an account</CardTitle>
+          <CardTitle className="text-2xl font-bold">
+            Create an account
+          </CardTitle>
           <CardDescription>Sign up to get started with savd</CardDescription>
         </CardHeader>
         <CardContent>
@@ -90,7 +123,9 @@ export default function RegisterPage() {
                 {...form.register("email")}
               />
               {form.formState.errors.email && (
-                <p className="text-sm text-destructive">{form.formState.errors.email.message}</p>
+                <p className="text-sm text-destructive">
+                  {form.formState.errors.email.message}
+                </p>
               )}
             </div>
             <div className="space-y-2">
@@ -103,7 +138,9 @@ export default function RegisterPage() {
                 {...form.register("password")}
               />
               {form.formState.errors.password && (
-                <p className="text-sm text-destructive">{form.formState.errors.password.message}</p>
+                <p className="text-sm text-destructive">
+                  {form.formState.errors.password.message}
+                </p>
               )}
             </div>
             <div className="space-y-2">
@@ -116,7 +153,9 @@ export default function RegisterPage() {
                 {...form.register("confirmPassword")}
               />
               {form.formState.errors.confirmPassword && (
-                <p className="text-sm text-destructive">{form.formState.errors.confirmPassword.message}</p>
+                <p className="text-sm text-destructive">
+                  {form.formState.errors.confirmPassword.message}
+                </p>
               )}
             </div>
             <Button type="submit" className="w-full" disabled={isLoading}>
@@ -130,7 +169,9 @@ export default function RegisterPage() {
               <span className="w-full border-t" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
+              <span className="bg-background px-2 text-muted-foreground">
+                Or continue with
+              </span>
             </div>
           </div>
 
@@ -146,7 +187,7 @@ export default function RegisterPage() {
           </Button>
         </CardContent>
         <CardFooter className="flex flex-col space-y-4">
-          <div className="text-sm text-muted-foreground text-center">
+          <div className="text-center text-sm text-muted-foreground">
             Already have an account?{" "}
             <Link href="/login" className="text-primary hover:underline">
               Sign in

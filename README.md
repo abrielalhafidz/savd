@@ -1,4 +1,4 @@
-readme_content = """# savd
+# savd
 
 > A modern personal finance SaaS that helps you understand where your money goes through intuitive dashboards, budgeting, and spending insights.
 
@@ -309,4 +309,3 @@ Contributions are welcome! Please open an issue first to discuss what you would 
 <p align="center">
   Built with care for people who want to <strong>savd</strong> more.
 </p>
-"""
