@@ -12,7 +12,7 @@ export default async function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screens p-8">
+    <div className="min-h-screen bg-gradient-to-br from-background to-muted p-8">
       <div className="mx-auto max-w-4xl">
         <h1 className="mb-4 text-3xl font-bold">Welcome to savd!</h1>
         <p className="mb-8 text-muted-foreground">
